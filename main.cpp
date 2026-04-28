@@ -23,11 +23,31 @@ bool isPressed(int key){
     return GetAsyncKeyState(key) & 0x8000;
 }
 
+void setCursorVisible(bool visible) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    CONSOLE_CURSOR_INFO info;
+    GetConsoleCursorInfo(hConsole, &info);
+
+    info.bVisible = visible;   // true = show, false = hide
+
+    SetConsoleCursorInfo(hConsole, &info);
+}
+
+void init(){
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD mode = 0;
+    GetConsoleMode(hOut, &mode);
+    SetConsoleMode(hOut, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+}
+
 int main(){
     char map[8][8];
     int X=0,Y=0;
+    init();
+    setCursorVisible(false);
     while (true){
-        std::cout<<"\033[H";
+        std::cout<<"\033[H"<<std::flush;
         for(int i=0;i<8;i++){
             for(int j=0;j<8;j++){
                 std::cout<<map[i][j]<<" ";
@@ -55,6 +75,7 @@ int main(){
         if (isPressed(VK_ESCAPE)){
             break;
         }
+        Sleep(100);
     }
     return 0;
 }
