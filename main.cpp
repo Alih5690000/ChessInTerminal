@@ -86,7 +86,7 @@ class Player{
     Player(std::vector<Piece*>& ap):all_pieces(ap){
         king=new King(0,0,all_pieces);
     }
-    bool isMated(){//finish it}
+    bool isMated(){/*finish it*/}
     int DoMove(int x, int y,int dx, int dy){
         for (auto i:pieces){
             if (i->x==x && i->y==y){
