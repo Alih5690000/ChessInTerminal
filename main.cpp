@@ -47,12 +47,9 @@ class King:public Piece{
     public:
     King(int x, int y, std::vector<Piece*>& p):Piece(x,y,p){}
     bool islegal(int dx, int dy) override{
-        int X=(dx-x)*(dx-x);
-        int Y=(dy-y)*(dy-y);
-        if (X!=1 || Y!=1)
-            return false;
-        else
-            return true;
+        int X = std::abs(dx - x);
+        int Y = std::abs(dy - y);
+        return X <= 1 && Y <= 1 && (X + Y > 0);
     }
 };
 
@@ -80,24 +77,79 @@ void init(){
 
 class Player{
     public:
+    Player* opponent;
     King* king;
     std::vector<Piece*>& all_pieces;
+    //my ones
     std::vector<Piece*> pieces;
-    Player(std::vector<Piece*>& ap):all_pieces(ap){
+    Player(std::vector<Piece*>& ap,Player* o):all_pieces(ap),opponent(o){
         king=new King(0,0,all_pieces);
     }
-    bool isMated(){/*finish it*/}
+    bool isChecked(){
+        if (!opponent || !king) return false;
+        if (opponent->king && opponent->king->islegal(king->x, king->y))
+            return true;
+        for (auto p : opponent->pieces){
+            if (p && p->islegal(king->x, king->y))
+                return true;
+        }
+        return false;
+    }
+    bool isMated(){
+        if (!opponent || !king) return false;
+        if (!isChecked()) return false;
+
+        auto squareAttacked = [&](int tx, int ty){
+            if (opponent->king && opponent->king->islegal(tx, ty))
+                return true;
+            for (auto p : opponent->pieces){
+                if (p && p->islegal(tx, ty))
+                    return true;
+            }
+            return false;
+        };
+
+        for (int dy = -1; dy <= 1; ++dy){
+            for (int dx = -1; dx <= 1; ++dx){
+                if (dx == 0 && dy == 0) continue;
+                int nx = king->x + dx;
+                int ny = king->y + dy;
+                if (nx < 0 || nx >= 8 || ny < 0 || ny >= 8)
+                    continue;
+                if (!king->islegal(nx, ny))
+                    continue;
+                bool occupiedBySelf = false;
+                for (auto own : pieces){
+                    if (own->x == nx && own->y == ny){
+                        occupiedBySelf = true;
+                        break;
+                    }
+                }
+                if (occupiedBySelf)
+                    continue;
+                if (!squareAttacked(nx, ny))
+                    return false;
+            }
+        }
+
+        return true;
+    }
     int DoMove(int x, int y,int dx, int dy){
+        if (x==dx  && y==dy) return -2;
+        Piece* p=nullptr;
         for (auto i:pieces){
             if (i->x==x && i->y==y){
-                if (i->islegal(dx,dy)){
-                    i->move(dx,dy);
-                    return 0;
-                }
-                else{
-                    return -1;
-                }
+                p=i;
             }
+            if (i->x==dx && i->y==dy) return -2;
+        }
+        if (p){
+            if (p->islegal(dx,dy)){
+                p->move(dx,dy);
+                return 0;
+            }
+            else
+                return -1;
         }
         return 1;
     }
