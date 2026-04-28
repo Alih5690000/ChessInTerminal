@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "name": "Linux",
+      "includePath": [
+        "/usr/x86_64-w64-mingw32/include",
+        "/usr/lib/gcc/x86_64-w64-mingw32/**"
+      ],
+      "compilerPath": "/usr/bin/x86_64-w64-mingw32-g++",
+      "intelliSenseMode": "gcc-x64"
+    }
+  ],
+  "version": 4
+}

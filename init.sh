@@ -1,0 +1,1 @@
+alias wcc=x86_64-w64-mingw32-gcc && alias w++=x86_64-w64-mingw32-g++
