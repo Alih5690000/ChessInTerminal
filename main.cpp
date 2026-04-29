@@ -7,6 +7,8 @@
 class Piece{
     public:
     int x,y;
+    int team=0;
+    char sym='$';
     std::vector<Piece*>& all_pieces;
     void take(Piece* piece){
         for (auto i=all_pieces.begin();i!=all_pieces.end();i++){
@@ -39,7 +41,7 @@ class Piece{
         return {{}};
     }
     void draw(char map[8][8]){
-        map[y][x]='$';
+        map[y][x]=sym;
     }
 };
 
@@ -50,6 +52,7 @@ class King:public Piece{
         int X = std::abs(dx - x);
         int Y = std::abs(dy - y);
         return X <= 1 && Y <= 1 && (X + Y > 0);
+        sym='K';
     }
 };
 
@@ -82,8 +85,16 @@ class Player{
     std::vector<Piece*>& all_pieces;
     //my ones
     std::vector<Piece*> pieces;
-    Player(std::vector<Piece*>& ap,Player* o):all_pieces(ap),opponent(o){
+    Player(std::vector<Piece*>& ap,Player* o,int team):all_pieces(ap),opponent(o){
         king=new King(0,0,all_pieces);
+        pieces.push_back([team,&ap](){
+            King* f=new King(0,0,ap);
+            f->team=team;
+            return f;
+        }());
+        for (auto i:pieces){
+            all_pieces.push_back(i);
+        }
     }
     bool isChecked(){
         if (!opponent || !king) return false;
@@ -145,7 +156,14 @@ class Player{
         }
         if (p){
             if (p->islegal(dx,dy)){
+                int oldX=p->x;
+                int oldY=p->y;
                 p->move(dx,dy);
+                if (isChecked()){
+                    p->y=oldY;
+                    p->x=oldX;
+                    return -1;
+                }
                 return 0;
             }
             else
@@ -158,14 +176,16 @@ class Player{
 int main(){
     char map[8][8];
     std::vector<Piece*> pieces;
-    {
-        pieces.push_back(new Piece{0,0,pieces});
-        pieces.push_back(new Piece{7,7,pieces});
-    }
+    Player p(pieces,nullptr,1);
+    Player pp(pieces,&p,0);
+    p.king->x=7;
+    p.opponent=&pp;
+    
     int X=0,Y=0;
     char cursor='#';
     bool dragging=false;
-    Piece* selectedPiece=nullptr;
+    bool WhiteTurn=true;
+    int sx,sy;
     init();
     setCursorVisible(false);
     while (true){
@@ -193,15 +213,21 @@ int main(){
                 for (auto i:pieces){
                     if (X==i->x && Y==i->y){
                         dragging=true;
-                        selectedPiece=i;
+                        sx=X;
+                        sy=Y;
                         cursor='@';
                         break;
                     }
                 }
             else{
-                selectedPiece->move(X,Y);
+                if (WhiteTurn){
+                    p.DoMove(sx,sy,X,Y);
+                }
+                else{
+                    pp.DoMove(sx,sy,X,Y);
+                }
+                WhiteTurn=!WhiteTurn;
                 dragging=false;
-                selectedPiece=nullptr;
                 cursor='#';
             }
         }
