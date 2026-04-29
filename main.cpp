@@ -4,6 +4,8 @@
 #include <utility>
 #include <cmath>
 
+//lol
+
 class Piece{
     public:
     int x,y;
