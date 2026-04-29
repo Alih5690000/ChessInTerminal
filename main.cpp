@@ -47,12 +47,40 @@ class Piece{
 
 class King:public Piece{
     public:
-    King(int x, int y, std::vector<Piece*>& p):Piece(x,y,p){}
+    King(int x, int y, std::vector<Piece*>& p):Piece(x,y,p){
+        sym='K';
+    }
     bool islegal(int dx, int dy) override{
         int X = std::abs(dx - x);
         int Y = std::abs(dy - y);
         return X <= 1 && Y <= 1 && (X + Y > 0);
-        sym='K';
+    }
+};
+
+class Rook: public Piece{
+    public:
+    Rook(int x, int y, std::vector<Piece*>& p):Piece(x,y,p){
+        sym='R';
+    }
+    bool islegal(int dx, int dy) override{
+        if (dx == x && dy == y) return false;
+        if (dx != x && dy != y) return false;
+
+        int stepX = (dx > x) ? 1 : (dx < x) ? -1 : 0;
+        int stepY = (dy > y) ? 1 : (dy < y) ? -1 : 0;
+        int cx = x + stepX;
+        int cy = y + stepY;
+
+        while (cx != dx || cy != dy) {
+            for (auto p : all_pieces) {
+                if (p != this && p->x == cx && p->y == cy)
+                    return false;
+            }
+            cx += stepX;
+            cy += stepY;
+        }
+
+        return true;
     }
 };
 
@@ -177,8 +205,15 @@ int main(){
     char map[8][8];
     std::vector<Piece*> pieces;
     Player p(pieces,nullptr,1);
+    p.king->sym='W';
     Player pp(pieces,&p,0);
-    p.king->x=7;
+    pp.king->sym='B';
+
+    Rook* r=new Rook(5,5,pieces);
+    r->team=0;
+    pp.pieces.push_back(r);
+    pieces.push_back(r);
+    p.king->x=0;
     p.opponent=&pp;
     
     int X=0,Y=0;
