@@ -85,7 +85,7 @@ class Rook: public Piece{
 };
 
 bool isPressed(int key){
-    return GetAsyncKeyState(key) & 0x8000;
+    return GetAsyncKeyState(key) & 0x0001;
 }
 
 void setCursorVisible(bool visible) {
@@ -115,11 +115,12 @@ class Player{
     std::vector<Piece*> pieces;
     Player(std::vector<Piece*>& ap,Player* o,int team):all_pieces(ap),opponent(o){
         king=new King(0,0,all_pieces);
-        pieces.push_back([team,&ap](){
-            King* f=new King(0,0,ap);
-            f->team=team;
-            return f;
+
+        pieces.push_back([team,&ap,this](){
+            king->team=team;
+            return king;
         }());
+
         for (auto i:pieces){
             all_pieces.push_back(i);
         }
@@ -206,6 +207,7 @@ int main(){
     std::vector<Piece*> pieces;
     Player p(pieces,nullptr,1);
     p.king->sym='W';
+    p.king->x=6;
     Player pp(pieces,&p,0);
     pp.king->sym='B';
 
@@ -213,7 +215,6 @@ int main(){
     r->team=0;
     pp.pieces.push_back(r);
     pieces.push_back(r);
-    p.king->x=0;
     p.opponent=&pp;
     
     int X=0,Y=0;
@@ -278,7 +279,6 @@ int main(){
         if (isPressed(VK_ESCAPE)){
             break;
         }
-        Sleep(100);
     }
     return 0;
 }
