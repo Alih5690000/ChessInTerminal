@@ -3,6 +3,17 @@
 #include <vector>
 #include <utility>
 #include <cmath>
+#include <algorithm>
+#undef _WIN32
+#ifdef _WIN32
+void clr(){
+    system("cls");
+}
+#else
+void clr(){
+    system("clear");
+}
+#endif
 
 //lol
 
@@ -39,9 +50,7 @@ class Piece{
             return -1;
         }
     }
-    [[maybe_unused]] std::vector<std::pair<int,int>> possibleMoves(){
-        return {{}};
-    }
+    virtual std::vector<std::pair<int,int>> possibleMoves() = 0;
     void draw(char map[8][8]){
         map[y][x]=sym;
     }
@@ -56,6 +65,29 @@ class King:public Piece{
         int X = std::abs(dx - x);
         int Y = std::abs(dy - y);
         return X <= 1 && Y <= 1 && (X + Y > 0);
+    }
+    std::vector<std::pair<int,int>> possibleMoves() override {
+        std::vector<std::pair<int,int>> moves;
+        for(int dx=-1; dx<=1; dx++){
+            for(int dy=-1; dy<=1; dy++){
+                if(dx==0 && dy==0) continue;
+                int nx = x + dx;
+                int ny = y + dy;
+                if(nx>=0 && nx<8 && ny>=0 && ny<8){
+                    bool occupiedByOwn = false;
+                    for(auto p : all_pieces){
+                        if(p->x == nx && p->y == ny && p->team == team){
+                            occupiedByOwn = true;
+                            break;
+                        }
+                    }
+                    if(!occupiedByOwn){
+                        moves.push_back({nx, ny});
+                    }
+                }
+            }
+        }
+        return moves;
     }
 };
 
@@ -83,6 +115,58 @@ class Rook: public Piece{
         }
 
         return true;
+    }
+    std::vector<std::pair<int,int>> possibleMoves() override {
+        std::vector<std::pair<int,int>> moves;
+        // Horizontal
+        for(int dir : {-1, 1}){
+            int nx = x + dir;
+            while(nx >= 0 && nx < 8){
+                bool occupied = false;
+                int occ_team = -1;
+                for(auto p : all_pieces){
+                    if(p->x == nx && p->y == y){
+                        occupied = true;
+                        occ_team = p->team;
+                        break;
+                    }
+                }
+                if(!occupied){
+                    moves.push_back({nx, y});
+                } else {
+                    if(occ_team != team){
+                        moves.push_back({nx, y});
+                    }
+                    break;
+                }
+                nx += dir;
+            }
+        }
+        // Vertical
+        for(int dir : {-1, 1}){
+            int ny = y + dir;
+            while(ny >= 0 && ny < 8){
+                bool occupied = false;
+                int occ_team = -1;
+                for(auto p : all_pieces){
+                    if(p->x == x && p->y == ny){
+                        occupied = true;
+                        occ_team = p->team;
+                        break;
+                    }
+                }
+                if(!occupied){
+                    moves.push_back({x, ny});
+                } else {
+                    if(occ_team != team){
+                        moves.push_back({x, ny});
+                    }
+                    break;
+                }
+                ny += dir;
+            }
+        }
+        return moves;
     }
 };
 
@@ -176,6 +260,60 @@ class Player{
 
         return true;
     }
+    bool isStalemated(){
+        if(isChecked()) return false;
+
+        auto removeFrom = [](std::vector<Piece*>& vec, Piece* target){
+            auto it = std::find(vec.begin(), vec.end(), target);
+            if(it != vec.end()) vec.erase(it);
+        };
+
+        auto addTo = [](std::vector<Piece*>& vec, Piece* target){
+            vec.push_back(target);
+        };
+
+        for(auto p : pieces){
+            auto moves = p->possibleMoves();
+
+            for(auto [nx, ny] : moves){
+                int oldX = p->x;
+                int oldY = p->y;
+
+                Piece* captured = nullptr;
+
+                for(auto opp : opponent->pieces){
+                    if(opp->x == nx && opp->y == ny){
+                        captured = opp;
+                        break;
+                    }
+                }
+
+                if(captured){
+                    removeFrom(all_pieces, captured);
+                    removeFrom(opponent->pieces, captured);
+                }
+
+                p->x = nx;
+                p->y = ny;
+
+                bool stillChecked = isChecked();
+
+                p->x = oldX;
+                p->y = oldY;
+
+                if(captured){
+                    addTo(all_pieces, captured);
+                    addTo(opponent->pieces, captured);
+                }
+
+                if(!stillChecked){
+                    return false;
+                }
+            }
+        }
+
+    return true;
+}
     int DoMove(int x, int y,int dx, int dy){
         if (x==dx  && y==dy) return -2;
         Piece* p=nullptr;
@@ -227,6 +365,18 @@ int main(){
     init();
     setCursorVisible(false);
     while (true){
+        if (p.isMated()){
+            std::cout<<"Black wins";
+            return 0;
+        }
+        else if (pp.isMated()){
+            std::cout<<"White wins";
+            return 0;
+        }
+        else if (p.isStalemated() || pp.isStalemated()){
+            std::cout<<"Stalemate";
+            return 0;
+        }
         std::cout<<"\033[H"<<std::flush;
         for(int i=0;i<8;i++){
             for(int j=0;j<8;j++){
@@ -281,6 +431,7 @@ int main(){
         if (isPressed(VK_ESCAPE)){
             break;
         }
+        Sleep(10);
     }
     return 0;
 }
