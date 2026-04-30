@@ -191,7 +191,7 @@ void setCursorVisible(bool visible) {
     CONSOLE_CURSOR_INFO info;
     GetConsoleCursorInfo(hConsole, &info);
 
-    info.bVisible = visible;   // true = show, false = hide
+    info.bVisible = visible;
 
     SetConsoleCursorInfo(hConsole, &info);
 }
@@ -415,13 +415,15 @@ int main(){
                     }
                 }
             else{
+                int code;
                 if (WhiteTurn){
-                    p.DoMove(sx,sy,X,Y);
+                    code=p.DoMove(sx,sy,X,Y);
                 }
                 else{
-                    pp.DoMove(sx,sy,X,Y);
+                    code=pp.DoMove(sx,sy,X,Y);
                 }
-                WhiteTurn=!WhiteTurn;
+                if(!code)
+                    WhiteTurn=!WhiteTurn;
                 dragging=false;
                 cursor='#';
             }
