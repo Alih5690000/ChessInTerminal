@@ -7,10 +7,12 @@
 #undef _WIN32
 #ifdef _WIN32
 void clr(){
+    std::cout<<"\033[H"<<std::flush;
     system("cls");
 }
 #else
 void clr(){
+    std::cout<<"\033[H"<<std::flush;
     system("clear");
 }
 #endif
@@ -21,7 +23,7 @@ class Piece{
     public:
     int x,y;
     int team=0;
-    char sym='$';
+    std::string sym="$";
     std::vector<Piece*>& all_pieces;
     void take(Piece* piece){
         for (auto i=all_pieces.begin();i!=all_pieces.end();i++){
@@ -51,8 +53,14 @@ class Piece{
         }
     }
     virtual std::vector<std::pair<int,int>> possibleMoves() = 0;
-    void draw(char map[8][8]){
-        map[y][x]=sym;
+    void draw(std::string map[8][8]){
+        map[y][x].clear();
+        if (team==0)
+            map[y][x]+="\033[30m";
+        else if (team==1)
+            map[y][x]+="\033[37m";
+        map[y][x]+=sym;
+        map[y][x]+="\033[0m";
     }
 };
 
@@ -201,11 +209,9 @@ class Player{
     std::vector<Piece*> pieces;
     Player(std::vector<Piece*>& ap,Player* o,int team):all_pieces(ap),opponent(o){
         king=new King(0,0,all_pieces);
+        king->team=team;
 
-        pieces.push_back([team,&ap,this](){
-            king->team=team;
-            return king;
-        }());
+        pieces.push_back(king);
 
         for (auto i:pieces){
             all_pieces.push_back(i);
@@ -343,10 +349,10 @@ class Player{
 };
 
 int main(){
-    char map[8][8];
+    std::string map[8][8];
     std::vector<Piece*> pieces;
     Player p(pieces,nullptr,1);
-    p.king->sym='k';
+    p.king->sym='K';
     p.king->x=6;
     Player pp(pieces,&p,0);
     pp.king->sym='K';
@@ -368,25 +374,15 @@ int main(){
     while (true){
         if (p.isMated()){
             clr();
-            std::cout<<"Black wins";
             return 0;
         }
         else if (pp.isMated()){
             clr();
-            std::cout<<"White wins";
             return 0;
         }
         else if (p.isStalemated() || pp.isStalemated()){
             clr();
-            std::cout<<"Stalemate";
             return 0;
-        }
-        std::cout<<"\033[H"<<std::flush;
-        for(int i=0;i<8;i++){
-            for(int j=0;j<8;j++){
-                std::cout<<map[i][j]<<" ";
-            }
-            std::cout<<std::endl;
         }
         if (isPressed(VK_UP) && Y>0){
             Y--;
@@ -401,7 +397,6 @@ int main(){
             X++;
         }
         if (isPressed('Q')){
-            clr();
             std::cout<<"quit";
             return 0;
         }
@@ -434,14 +429,16 @@ int main(){
             }
         }
         for (auto i:pieces){
-            if (i->team==1)
-                std::cout<<"\033[37m";
-            else if (i->team==0)
-                std::cout<<"\033[30m";
             i->draw(map);
-            std::cout<<"\033[0m";
         }
-        map[Y][X]=cursor;
+        map[Y][X] = "\033[41m" + std::string(1, cursor) + "\033[0m";
+        std::cout<<"\033[H"<<std::flush;
+        for(int i=0;i<8;i++){
+            for(int j=0;j<8;j++){
+                std::cout<<map[i][j]<<" ";
+            }
+            std::cout<<std::endl;
+        }
         if (isPressed(VK_ESCAPE)){
             break;
         }
