@@ -346,10 +346,10 @@ int main(){
     char map[8][8];
     std::vector<Piece*> pieces;
     Player p(pieces,nullptr,1);
-    p.king->sym='W';
+    p.king->sym='k';
     p.king->x=6;
     Player pp(pieces,&p,0);
-    pp.king->sym='B';
+    pp.king->sym='K';
 
     Rook* r=new Rook(5,5,pieces);
     r->team=0;
@@ -362,18 +362,22 @@ int main(){
     bool dragging=false;
     bool WhiteTurn=true;
     int sx,sy;
+    clr();
     init();
     setCursorVisible(false);
     while (true){
         if (p.isMated()){
+            clr();
             std::cout<<"Black wins";
             return 0;
         }
         else if (pp.isMated()){
+            clr();
             std::cout<<"White wins";
             return 0;
         }
         else if (p.isStalemated() || pp.isStalemated()){
+            clr();
             std::cout<<"Stalemate";
             return 0;
         }
@@ -395,6 +399,11 @@ int main(){
         }
         if (isPressed(VK_RIGHT) && X<7){
             X++;
+        }
+        if (isPressed('Q')){
+            clr();
+            std::cout<<"quit";
+            return 0;
         }
         if (isPressed(VK_RETURN)){
             if (!dragging)
@@ -425,7 +434,12 @@ int main(){
             }
         }
         for (auto i:pieces){
+            if (i->team==1)
+                std::cout<<"\033[37m";
+            else if (i->team==0)
+                std::cout<<"\033[30m";
             i->draw(map);
+            std::cout<<"\033[0m";
         }
         map[Y][X]=cursor;
         if (isPressed(VK_ESCAPE)){
