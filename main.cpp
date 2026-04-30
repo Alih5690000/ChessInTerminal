@@ -4,7 +4,8 @@
 #include <utility>
 #include <cmath>
 #include <algorithm>
-#undef _WIN32
+#define ENABLE_ANSII 1
+//#undef _WIN32
 #ifdef _WIN32
 void clr(){
     std::cout<<"\033[H"<<std::flush;
@@ -55,12 +56,14 @@ class Piece{
     virtual std::vector<std::pair<int,int>> possibleMoves() = 0;
     void draw(std::string map[8][8]){
         map[y][x].clear();
-        if (team==0)
-            map[y][x]+="\033[30m";
-        else if (team==1)
-            map[y][x]+="\033[37m";
+        if (ENABLE_ANSII)
+            if (team==0)
+                map[y][x]+="\033[30m";
+            else if (team==1)
+                map[y][x]+="\033[37m";
         map[y][x]+=sym;
-        map[y][x]+="\033[0m";
+        if (ENABLE_ANSII)
+            map[y][x]+="\033[0m";
     }
 };
 
@@ -431,7 +434,10 @@ int main(){
         for (auto i:pieces){
             i->draw(map);
         }
-        map[Y][X] = "\033[41m" + std::string(1, cursor) + "\033[0m";
+        if (ENABLE_ANSII)
+            map[Y][X] = "\033[41m" + std::string(1, cursor) + "\033[0m";
+        else
+            map[Y][X]=std::string(1, cursor);
         std::cout<<"\033[H"<<std::flush;
         for(int i=0;i<8;i++){
             for(int j=0;j<8;j++){

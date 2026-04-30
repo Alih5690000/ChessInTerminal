@@ -1,0 +1,1 @@
+w++ main.cpp -static-libgcc -static-libstdc++ -o main
