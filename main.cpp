@@ -8,13 +8,11 @@
 //#undef _WIN32
 #ifdef _WIN32
 void clr(){
-    std::cout<<"\033[H"<<std::flush;
-    system("cls");
+    std::cout << "\033[2J"; // clear entire screen
 }
 #else
 void clr(){
-    std::cout<<"\033[H"<<std::flush;
-    system("clear");
+    std::cout << "\033[2J"; // clear entire screen
 }
 #endif
 
@@ -430,7 +428,8 @@ int main(){
         }
         for (int i=0;i<8;i++){
             for (int j=0;j<8;j++){
-                map[i][j]='.';
+                map[i][j].clear();
+                map[i][j]+=".";
             }
         }
         for (auto i:pieces){
